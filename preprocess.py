@@ -1,10 +1,3 @@
-"""Stage 4: ClearML Serving custom-engine preprocessing for the sentiment model.
-
-The published artifact is a pickled bundle ``{"model": ..., "vectorizer": ...}``,
-so a custom engine is required: TF-IDF vectorization and probability decoding are
-handled here instead of relying on the built-in sklearn engine.
-"""
-
 from __future__ import annotations
 
 import pickle
