@@ -1,0 +1,83 @@
+version: "3"
+
+# Minimal ClearML Serving stack (no Triton / monitoring) for a CPU sklearn-style
+# custom model. The inference service is exposed on host port 9090 to avoid the
+# clash with the ClearML web UI that already occupies host port 8080.
+
+services:
+  zookeeper:
+    image: bitnamilegacy/zookeeper:3.7.0
+    container_name: clearml-serving-zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - clearml-serving-backend
+
+  kafka:
+    image: bitnamilegacy/kafka:3.1.1
+    container_name: clearml-serving-kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://clearml-serving-kafka:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://clearml-serving-kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=clearml-serving-zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CREATE_TOPICS="topic_test:1:1"
+    depends_on:
+      - zookeeper
+    networks:
+      - clearml-serving-backend
+
+  clearml-serving-inference:
+    image: clearml/clearml-serving-inference:latest
+    container_name: clearml-serving-inference
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - "9090:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      CLEARML_WEB_HOST: ${CLEARML_WEB_HOST}
+      CLEARML_API_HOST: ${CLEARML_API_HOST}
+      CLEARML_FILES_HOST: ${CLEARML_FILES_HOST}
+      CLEARML_API_ACCESS_KEY: ${CLEARML_API_ACCESS_KEY}
+      CLEARML_API_SECRET_KEY: ${CLEARML_API_SECRET_KEY}
+      CLEARML_SERVING_TASK_ID: ${CLEARML_SERVING_TASK_ID:-}
+      CLEARML_SERVING_PORT: ${CLEARML_SERVING_PORT:-8080}
+      CLEARML_SERVING_POLL_FREQ: ${CLEARML_SERVING_POLL_FREQ:-1.0}
+      CLEARML_DEFAULT_SERVE_SUFFIX: ${CLEARML_DEFAULT_SERVE_SUFFIX:-serve}
+      CLEARML_DEFAULT_KAFKA_SERVE_URL: ${CLEARML_DEFAULT_KAFKA_SERVE_URL:-clearml-serving-kafka:9092}
+      CLEARML_EXTRA_PYTHON_PACKAGES: ${CLEARML_EXTRA_PYTHON_PACKAGES:-}
+      CLEARML_USE_GUNICORN: ${CLEARML_USE_GUNICORN:-}
+    depends_on:
+      - kafka
+    networks:
+      - clearml-serving-backend
+
+  clearml-serving-statistics:
+    image: clearml/clearml-serving-statistics:latest
+    container_name: clearml-serving-statistics
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      CLEARML_WEB_HOST: ${CLEARML_WEB_HOST}
+      CLEARML_API_HOST: ${CLEARML_API_HOST}
+      CLEARML_FILES_HOST: ${CLEARML_FILES_HOST}
+      CLEARML_API_ACCESS_KEY: ${CLEARML_API_ACCESS_KEY}
+      CLEARML_API_SECRET_KEY: ${CLEARML_API_SECRET_KEY}
+      CLEARML_SERVING_TASK_ID: ${CLEARML_SERVING_TASK_ID:-}
+      CLEARML_DEFAULT_KAFKA_SERVE_URL: ${CLEARML_DEFAULT_KAFKA_SERVE_URL:-clearml-serving-kafka:9092}
+      CLEARML_SERVING_POLL_FREQ: ${CLEARML_SERVING_POLL_FREQ:-1.0}
+    depends_on:
+      - kafka
+    networks:
+      - clearml-serving-backend
+
+networks:
+  clearml-serving-backend:
+    driver: bridge
