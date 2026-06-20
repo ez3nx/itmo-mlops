@@ -15,8 +15,6 @@ outputs/
 # Local secrets and serving runtime env
 serving/.env
 
-# Reference material and local ClearML server (not part of this submission)
-itmo_mlops_example/
 infra/
 
 # OS / editor
