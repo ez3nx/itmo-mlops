@@ -1,0 +1,9 @@
+clearml
+clearml-agent
+clearml-serving
+datasets
+pandas
+scikit-learn
+matplotlib
+gradio
+requests
