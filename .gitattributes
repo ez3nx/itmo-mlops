@@ -1,0 +1,15 @@
+# Normalize line endings and force text handling so ClearML can apply git diffs.
+* text=auto eol=lf
+
+*.md text
+*.py text
+*.yml text
+*.yaml text
+*.env text
+*.txt text
+*.csv text
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.pkl binary
