@@ -97,7 +97,7 @@ python train.py --dataset-id <DATASET_ID> --task-name exp-2 --c 0.3 --max-featur
 В UI видны два эксперимента с различиями в параметрах и метриках,
 у каждого есть artifact модели:
 
-
+![ClearML Exps](imgs/clearml-exps.png)
 
 > Примечание: если нужно обучить локально без агента (для отладки), добавьте
 > флаг `--skip-remote`.
