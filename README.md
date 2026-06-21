@@ -126,6 +126,33 @@ python publish_model.py --task-id <BEST_TASK_ID>
 (класс `Preprocess`: `load` загружает бандл, `process` делает TF-IDF и
 `predict_proba`, `postprocess` возвращает `label`/`confidence`).
 
+**NB:**
+
+Serving крутится в Docker, а ClearML Server — на хосте. Чтобы контейнеры и хост
+ссылались на files-server по одному адресу, используется hostname-алиас
+`clearml-files`:
+
+1. Добавить в hosts-файл (нужны права администратора), один раз:
+
+```powershell
+Add-Content "$env:windir\System32\drivers\etc\hosts" "`n127.0.0.1 clearml-files"
+```
+
+2. В `~/clearml.conf` указать files-server через этот алиас:
+
+```text
+files_server: "http://clearml-files:8081"
+```
+
+В `docker-compose.yml` алиас проброшен в контейнеры через
+`extra_hosts: clearml-files:host-gateway`. Благодаря этому один и тот же URL
+артефактов доступен и хосту (`127.0.0.1`), и контейнерам (через шлюз до хоста).
+
+Версии библиотек обучения и serving должны совпадать, иначе распакованный
+`TfidfVectorizer` будет считаться необученным. Проект зафиксирован на
+`scikit-learn==1.4.2` (ставится и на Python 3.12 хоста, и на Python 3.11
+контейнера, без перехода на numpy 2).
+
 ### 4.1. Создание сервиса
 
 ```powershell
@@ -147,8 +174,9 @@ Copy-Item serving/example.env serving/.env
 ```
 
 В `serving/.env` укажите `CLEARML_API_ACCESS_KEY`, `CLEARML_API_SECRET_KEY` и
-`CLEARML_SERVING_TASK_ID=<SERVING_TASK_ID>`. Хосты уже указывают на
-`host.docker.internal`, чтобы контейнеры видели запущенный ClearML Server
+`CLEARML_SERVING_TASK_ID=<SERVING_TASK_ID>`. API/Web указывают на
+`host.docker.internal`, а files-server — на `clearml-files:8081` (см. 4.0).
+`CLEARML_EXTRA_PYTHON_PACKAGES="scikit-learn==1.4.2"` доустанавливает в контейнер ту же версию sklearn, что и при обучении.
 
 ### 4.3. Запуск стека
 
@@ -171,8 +199,9 @@ clearml-serving --id <SERVING_TASK_ID> model add `
   --model-id <MODEL_ID>
 ```
 
-Сервис синхронизируется в течение ~1 минуты. Модель загружается именно из
-ClearML (никаких локальных `.pkl` в обход реестра).
+Сервис синхронизируется в течение ~1 минуты, а первый запрос дополнительно
+доустанавливает пакеты и тянет модель (может занять 1-2 минуты). Модель
+загружается именно из ClearML: `publish_model.py` заливает веса на files-server (через `Session.get_files_server_host()`), поэтому контейнер скачивает их по HTTP, а не использует локальный `.pkl`.
 
 ### 4.5. Примеры запросов
 
@@ -224,5 +253,6 @@ curl -X POST "http://127.0.0.1:9090/serve/sentiment" \
 python app.py
 ```
 
-UI доступен по адресу `http://127.0.0.1:7860`. При недоступном endpoint UI
-показывает понятную ошибку вместо падения.
+UI доступен по адресу `http://127.0.0.1:7860`
+
+![Gradio interface](imgs/mlops-gradio.png)
