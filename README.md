@@ -226,14 +226,3 @@ python app.py
 
 UI доступен по адресу `http://127.0.0.1:7860`. При недоступном endpoint UI
 показывает понятную ошибку вместо падения.
-
-## Сводка по баллам
-
-| Этап | Реализация |
-|------|------------|
-| Инфраструктура | ClearML Server + Agent, очередь `students` |
-| Dataset | `upload_dataset.py`, ClearML Dataset с версией |
-| Training + Agent | `train.py`, удалённый запуск, 2 эксперимента, метрики и artifact |
-| Model Registry | `publish_model.py`, `OutputModel` с тегами и версией |
-| Inference | ClearML Serving (custom engine) на порту 9090 |
-| UI | Gradio поверх HTTP с latency и обработкой ошибок |
