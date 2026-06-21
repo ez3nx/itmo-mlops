@@ -102,9 +102,10 @@ python train.py --dataset-id <DATASET_ID> --task-name exp-2 --c 0.3 --max-featur
 > Примечание: если нужно обучить локально без агента (для отладки), добавьте
 > флаг `--skip-remote`.
 
+
 ## Этап 3. Model Registry
 
-После выбора лучшего эксперимента модель публикуется в Model Registry.
+После выбора лучшего эксперимента модель публикуем в Model Registry.
 Скрипт `publish_model.py`:
 
 - берёт artifact `model` из выбранной задачи;
@@ -115,12 +116,8 @@ python train.py --dataset-id <DATASET_ID> --task-name exp-2 --c 0.3 --max-featur
 python publish_model.py --task-id <BEST_TASK_ID>
 ```
 
-```text
-Model ID: <MODEL_ID>
-```
+![ClearML Model Registry](imgs/clearml-model-registry.png)
 
-Проверка: модель видна в разделе **Models / Registry**, имеет версию, метрики
-и теги. Это полноценная запись в реестре, а не просто artifact.
 
 ## Этап 4. Inference Endpoint (ClearML Serving)
 
@@ -135,7 +132,7 @@ Model ID: <MODEL_ID>
 clearml-serving create --name "itmo-sentiment-serving"
 ```
 
-Команда печатает ID сервиса:
+Команда выведет в консоли ID сервиса:
 
 ```text
 New Serving Service created: id=<SERVING_TASK_ID>
@@ -143,7 +140,7 @@ New Serving Service created: id=<SERVING_TASK_ID>
 
 ### 4.2. Настройка окружения
 
-Скопируйте шаблон и подставьте значения:
+Далее копируем шаблон и подставляем значения:
 
 ```powershell
 Copy-Item serving/example.env serving/.env
@@ -151,8 +148,7 @@ Copy-Item serving/example.env serving/.env
 
 В `serving/.env` укажите `CLEARML_API_ACCESS_KEY`, `CLEARML_API_SECRET_KEY` и
 `CLEARML_SERVING_TASK_ID=<SERVING_TASK_ID>`. Хосты уже указывают на
-`host.docker.internal`, чтобы контейнеры видели ClearML Server, запущенный на
-хосте.
+`host.docker.internal`, чтобы контейнеры видели запущенный ClearML Server
 
 ### 4.3. Запуск стека
 
